@@ -49,11 +49,38 @@ app.get("/todos", checksExistsUserAccount, (request, response) => {
 });
 
 app.post("/todos", checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { title, deadline } = request.body;
+  const { user } = request;
+
+  const todosOperation = {
+    id: uuidv4(),
+    title,
+    done: false,
+    deadline: new Date(deadline),
+    created_at: new Date(),
+  };
+
+  user.todos.push(todosOperation);
+
+  return response.status(201).json(todosOperation);
 });
 
 app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { id } = request.params;
+  const { user } = request;
+  const { title, deadline } = request.body;
+  const tasks = user.todos;
+
+  const task = tasks.find((tasks) => tasks.id === id);
+
+  if (!task) {
+    return response.status(400).json({ error: "Task not found" });
+  }
+
+  task.title = title;
+  task.deadline = deadline;
+
+  return response.status(201).json(task);
 });
 
 app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
