@@ -23,6 +23,23 @@ function checksExistsUserAccount(request, response, next) {
   return next();
 }
 
+function checksExistsTask(request, response, next) {
+  const { id } = request.params;
+  const { user } = request;
+  const tasks = user.todos;
+
+  const task = tasks.find((tasks) => tasks.id === id);
+
+  if (!task) {
+    return response.status(400).json({ error: "Task not found" });
+  }
+
+  request.task = task;
+  request.tasks = tasks;
+
+  return next();
+}
+
 app.post("/users", (request, response) => {
   const { name, username } = request.body;
 
@@ -65,30 +82,43 @@ app.post("/todos", checksExistsUserAccount, (request, response) => {
   return response.status(201).json(todosOperation);
 });
 
-app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
-  const { id } = request.params;
-  const { user } = request;
-  const { title, deadline } = request.body;
-  const tasks = user.todos;
+app.put(
+  "/todos/:id",
+  checksExistsUserAccount,
+  checksExistsTask,
+  (request, response) => {
+    const { task } = request;
+    const { title, deadline } = request.body;
 
-  const task = tasks.find((tasks) => tasks.id === id);
+    task.title = title;
+    task.deadline = deadline;
 
-  if (!task) {
-    return response.status(400).json({ error: "Task not found" });
+    return response.status(201).json(task);
   }
+);
 
-  task.title = title;
-  task.deadline = deadline;
+app.patch(
+  "/todos/:id/done",
+  checksExistsUserAccount,
+  checksExistsTask,
+  (request, response) => {
+    const { user, task } = request;
+    task.done = true;
 
-  return response.status(201).json(task);
-});
+    return response.status(201).json(task);
+  }
+);
 
-app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
-  // Complete aqui
-});
+app.delete(
+  "/todos/:id",
+  checksExistsUserAccount,
+  checksExistsTask,
+  (request, response) => {
+    const { user, task, tasks } = request;
+    tasks.splice(task, 1);
 
-app.delete("/todos/:id", checksExistsUserAccount, (request, response) => {
-  // Complete aqui
-});
+    return response.status(200).json(tasks);
+  }
+);
 
 module.exports = app;
