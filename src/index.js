@@ -92,7 +92,7 @@ app.put(
     const { title, deadline } = request.body;
 
     task.title = title;
-    task.deadline = deadline;
+    task.deadline = new Date(deadline);
 
     return response.status(201).json(task);
   }
