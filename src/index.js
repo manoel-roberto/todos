@@ -31,7 +31,7 @@ function checksExistsTask(request, response, next) {
   const task = tasks.find((tasks) => tasks.id === id);
 
   if (!task) {
-    return response.status(400).json({ error: "Task not found" });
+    return response.status(404).json({ error: "Task not found" });
   }
 
   request.task = task;
@@ -43,20 +43,21 @@ function checksExistsTask(request, response, next) {
 app.post("/users", (request, response) => {
   const { name, username } = request.body;
 
-  const userAlreadyExist = users.some((user) => user.id === id);
+  const user = {
+    id: uuidv4(),
+    name,
+    username,
+    todos: [],
+  };
+  const userAlreadyExist = users.some((user) => user.username === username);
 
   if (userAlreadyExist) {
     return response.status(400).json({ error: "User already exist!" });
   }
 
-  users.push({
-    id: uuidv4(),
-    name,
-    username,
-    todos: [],
-  });
+  users.push(user);
 
-  return response.status(201).send();
+  return response.status(201).json(user);
 });
 
 app.get("/todos", checksExistsUserAccount, (request, response) => {
@@ -117,7 +118,7 @@ app.delete(
     const { user, task, tasks } = request;
     tasks.splice(task, 1);
 
-    return response.status(200).json(tasks);
+    return response.status(204).json(tasks);
   }
 );
 
